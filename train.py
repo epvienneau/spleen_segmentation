@@ -63,7 +63,6 @@ def test(args, model, device, test_loader):
     
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
-    #Accuracy: {}/{} ({:.0f}%)\n'.format(avg_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
     true = np.reshape(torch.stack(true).cpu().data.numpy(), (1000)) #needs editing?
     predictions = np.reshape(torch.stack(predictions).cpu().data.numpy(), (1000)) #needs editing?
     dice = dice_coeff(predictions, true)

@@ -3,16 +3,17 @@ import numpy as np
 from torch.utils import data
 import scipy.misc
 import cv2
+import nibabel as nib
 
-def normalizeImage(img):
-    img = img.astype('float')
-    minval = img.min()
-    maxval = img.max()
-    if minval != maxval:
-        img -= minval
-        img /= (maxval-minval)
-    return img*255
+def soft_tissue_window(img):
+    #img = img.astype('float')
+    img[np.where(img<100)] = 0
+    img[np.where(img>400)] = 0
+    return img
 
+def isolate_spleen(label):
+    label[np.where(label != 1)] = 0
+    return label
 
 class img_loader(data.Dataset):
     def __init__(self, sub_list):
@@ -21,19 +22,19 @@ class img_loader(data.Dataset):
     def __getitem__(self, index):
         # load image
         subinfo = self.sub_list
-        img_folder = subinfo[0][index]
-        img_name = subinfo[1][index]
-        img_name = img_name + '.jpg'
-        probs = subinfo[2][index]
-        probs = np.asarray(probs)
+        img_folder = subinfo[0][index] #data/training/img
+        label_folder = subinfo[1][index] #data/training/label
+        img_name = subinfo[2][index] #eg, img0001.nii.gz
+        label_name = subinfo[3][index] #eg, label0001.nii.gz
         img_file = os.path.join(img_folder, img_name)
-        gray_img = scipy.misc.imread(img_file)
-        gray_img = normalizeImage(gray_img)
-        gray_img = cv2.resize(gray_img, (224, 224)) #now its 224x224x3 for resnet
-        gray_img = np.swapaxes(gray_img, 0, 2) #make it 3x224x224
-        gray_img = gray_img.astype('float')
-        probs = probs.astype('long')
-        return [gray_img, probs]
+        label_file = os.path.join(label_folder, label_name)
+        img = nib.load(img_file).get_fdata()
+        img = soft_tissue_window(img)
+        label = nib.load(label_file).get_fdata()
+        label = isolate_spleen(label)
+        #img = img.astype('float')
+        #probs = probs.astype('long')
+        return [img, label]
 
     def __len__(self): 
         return len(self.sub_list[0]) 
