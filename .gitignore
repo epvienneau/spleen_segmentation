@@ -1,0 +1,4 @@
+data/*
+loss_outputs/*
+models/*
+*.swp
