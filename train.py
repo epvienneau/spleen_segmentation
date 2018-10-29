@@ -4,27 +4,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
-import torchvision.models as models
+from torchvision import transforms #, datasets
+#import torchvision.models as models
 from img_loader import img_loader
-import torch.utils.model_zoo as model_zoo
+from dice_loss import dice_coeff
+from unet import UNet
+#import torch.utils.model_zoo as model_zoo
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import csv
 import sklearn.metrics as metrics
 import datetime
-from tabulate import tabulate
-from memory_profiler import profile
 import time
 
 start_time = time.time()
 training_loss = []
 test_loss = []
-accuracy = []
-precision = []
-recall = []
-confusion = []
+dice_loss = []
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -32,8 +28,8 @@ def train(args, model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad() 
         output = model(data)
-        criterion = nn.CrossEntropyLoss()
-        target = torch.max(target, 1)[1]
+        criterion = nn.BCELoss()
+        target = torch.max(target, 1)[1] #needs editing?
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -53,13 +49,13 @@ def test(args, model, device, test_loader):
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = F.log_softmax(model(data), dim=1)
-            criterion = nn.CrossEntropyLoss()
-            target = torch.max(target, 1)[1]
+            output = F.sigmoid(model(data), dim=1) #still need dim=1?
+            criterion = nn.BCELoss()
+            target = torch.max(target, 1)[1] #needs editing?
             true.append(target)
             loss += criterion(output, target).item() 
             avg_loss += loss
-            pred = output.max(1, keepdim=True)[1]
+            pred = output.max(1, keepdim=True)[1] #needs editing? 
             predictions.append(pred)
             correct += pred.eq(target.view_as(pred)).sum().item()
     avg_loss /= len(test_loader.dataset)
@@ -68,24 +64,12 @@ def test(args, model, device, test_loader):
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
     #Accuracy: {}/{} ({:.0f}%)\n'.format(avg_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
-    true = np.reshape(torch.stack(true).cpu().data.numpy(), (1000))
-    predictions = np.reshape(torch.stack(predictions).cpu().data.numpy(), (1000))
-    a = metrics.accuracy_score(true, predictions)
-    accuracy.append(a)
-    print('Accuracy: {:.0f}%'.format(100. * a))
-    r = metrics.recall_score(true, predictions, labels=[0, 1, 2, 3, 4, 5, 6], average='micro')
-    recall.append(r)
-    print('Recall: {:.2f} '.format(r))
-    p = metrics.precision_score(true, predictions, labels=[0, 1, 2, 3, 4, 5, 6], average='micro')
-    precision.append(p)
-    print('Precision: {:.2f}'.format(p))
-    c = metrics.confusion_matrix(true, predictions, labels=[0, 1, 2, 3, 4, 5, 6])
-    for item in np.reshape(c, (49, 1)):
-        confusion.append(item)
-    print('Confusion:')
-    print(tabulate(c))
+    true = np.reshape(torch.stack(true).cpu().data.numpy(), (1000)) #needs editing?
+    predictions = np.reshape(torch.stack(predictions).cpu().data.numpy(), (1000)) #needs editing?
+    dice = dice_coeff(predictions, true)
+    dice_loss.append(dice)
+    print('Dice: {:.0f}%'.format(dice))
 
-#@profile
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Mutliclass Classification')
     parser.add_argument('--batch-size', type=int, default=1, metavar='N',
@@ -146,27 +130,10 @@ def main():
     train_loader = torch.utils.data.DataLoader(img_loader(data_train), batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(img_loader(data_test), batch_size=args.test_batch_size, shuffle=True, **kwargs) 
 
-    #model = models.resnet18(pretrained=True, **kwargs).to(device)
-    model = models.resnet152(pretrained=True).to(device)
-    for params in model.parameters():
-        params.requires_grad = False
-    #only the final classification layer is learnable
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(model.fc.in_features, 512)
-    model.dropout = nn.Dropout(0.5)
-    model.fc = nn.Linear(model.fc.in_features, 256)
-    model.dropout = nn.Dropout(0.5)
-    model.fc = nn.Linear(model.fc.in_features, 128)
-    model.dropout = nn.Dropout(0.5)
-    model.fc = nn.Linear(model.fc.in_features, 64)
-    model.dropout = nn.Dropout(0.5)
-    model.fc = nn.Linear(model.fc.in_features, 32)
-    model.dropout = nn.Dropout(0.5)
-    model.fc = nn.Linear(model.fc.in_features, 16)
-    model.fc = nn.Linear(model.fc.in_features, 7)
+    model = UNet(n_channels=3, n_classes=1).to(device)
     model.double()
     model = model.cuda()
-    #need to use adam optimizer
+    #use adam optimizer, try SGD if not good results
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
@@ -175,9 +142,9 @@ def main():
         #print(time.time()-start_time)
         test(args, model, device, test_loader)
 
-    torch.save(model.state_dict(), './Resnetmodel.pt')
-    
     current_daytime = str(datetime.datetime.now()).replace(" ", "_")[:-7]    
+    model_file = 'models/UNetModel_'+current_daytime+'.pth'
+    torch.save(model.state_dict(), model_file)
     loss_file = 'loss_outputs/loss_'+current_daytime
     with open(loss_file, 'w', newline='') as csvfile:
         losswriter = csv.writer(csvfile, dialect='excel', delimiter=' ', 
@@ -197,21 +164,9 @@ def main():
         losswriter.writerow('Epsilon')
         losswriter.writerow(str(args.eps))
         
-        losswriter.writerow('accuracy')
-        for item in accuracy:
+        losswriter.writerow('DICE')
+        for item in dice_loss:
             losswriter.writerow(str(round(item, 4)))
-        
-        losswriter.writerow('recall')
-        for item in recall:
-            losswriter.writerow(str(round(item, 4)))
-        
-        losswriter.writerow('precision')
-        for item in precision:
-            losswriter.writerow(str(round(item, 4)))
-        
-        losswriter.writerow('confusion')
-        for item in confusion:
-            losswriter.writerow(str(item))
         
         losswriter.writerow('training')
         for item in training_loss:
