@@ -1,8 +1,6 @@
 import os
 import numpy as np
-from torch.utils import data
-import scipy.misc
-import cv2
+#from torch.utils import data
 import nibabel as nib
 
 def soft_tissue_window(img):
