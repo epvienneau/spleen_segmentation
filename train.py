@@ -4,18 +4,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import transforms #, datasets
-#import torchvision.models as models
+from torchvision import transforms, datasets
 from img_loader import img_loader
 from dice_loss import dice_coeff
 from unet import UNet
-#import torch.utils.model_zoo as model_zoo
 import math
 import numpy as np
 import csv
 import sklearn.metrics as metrics
 import datetime
 import time
+import os
+from torch.utils.data import Dataset
+from torch.utils.data.sampler import SubsetRandomSampler
 
 start_time = time.time()
 training_loss = []
@@ -29,7 +30,6 @@ def train(args, model, device, train_loader, optimizer, epoch):
         optimizer.zero_grad() 
         output = model(data)
         criterion = nn.BCELoss()
-        target = torch.max(target, 1)[1] #needs editing?
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -43,31 +43,21 @@ def test(args, model, device, test_loader):
     model.eval()
     loss = 0
     avg_loss = 0
-    correct = 0
-    true = []
-    predictions = []
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = F.sigmoid(model(data), dim=1) #still need dim=1?
+            output = F.sigmoid(model(data))
             criterion = nn.BCELoss()
-            target = torch.max(target, 1)[1] #needs editing?
-            true.append(target)
             loss += criterion(output, target).item() 
             avg_loss += loss
-            pred = output.max(1, keepdim=True)[1] #needs editing? 
-            predictions.append(pred)
-            correct += pred.eq(target.view_as(pred)).sum().item()
     avg_loss /= len(test_loader.dataset)
     test_loss.append(avg_loss)
     
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
-    true = np.reshape(torch.stack(true).cpu().data.numpy(), (1000)) #needs editing?
-    predictions = np.reshape(torch.stack(predictions).cpu().data.numpy(), (1000)) #needs editing?
-    dice = dice_coeff(predictions, true)
+    dice = dice_coeff(output, target)
     dice_loss.append(dice)
-    print('Dice: {:.0f}%'.format(dice))
+    print('Dice: {:.4f}%'.format(dice))
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Mutliclass Classification')
@@ -95,39 +85,21 @@ def main():
     torch.manual_seed(args.seed)
     
     device = torch.device("cuda" if use_cuda else "cpu")
+ 
+    training_img_folder = ['data/training/slices/img']*3779
+    training_label_folder  = ['data/test/slices/label']*3779
+    training_img_files = os.listdir('data/training/slices/img')
+    training_label_files = os.listdir('data/training/slices/label')
     
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-    # parse csv file to create dictionary for dataloader
-    probs_train = []
-    probs_test = []
-    img_file_train = []
-    img_file_test = []
-    img_path_train = ['data/train/']*9015
-    img_path_test = ['data/test/']*1000
-    with open('data/labels/Train_labels.csv', 'r') as f:
-        next(f)
-        for count, line in enumerate(f):
-            file_info = line.split()[0] #get single line
-            file_info = file_info.split(',', 1) #separate file name from probs
-            img_file_train.append(file_info[0]) #pull out img file str
-            probs = file_info[1] #probs, as a single str with commas in it
-            probs = probs.split(',') #probs, as a list of strings
-            probs = list(map(int, probs)) #probs as a list of ints
-            probs_train.append(probs)
-    with open('data/labels/Test_labels.csv', 'r') as f:
-        next(f)
-        for count, line in enumerate(f):
-            file_info = line.split()[0] #get single line
-            file_info = file_info.split(',', 1) #separate file name from probs
-            img_file_test.append(file_info[0]) #pull out img file str
-            probs = file_info[1] #probs, as a single str with commas in it
-            probs = probs.split(',') #probs, as a list of strings
-            probs = list(map(int, probs)) #probs as a list of ints
-            probs_test.append(probs)
-    data_train = [img_path_train, img_file_train, probs_train]
-    data_test = [img_path_test, img_file_test, probs_test] 
-    train_loader = torch.utils.data.DataLoader(img_loader(data_train), batch_size=args.batch_size, shuffle=True, **kwargs)
-    test_loader = torch.utils.data.DataLoader(img_loader(data_test), batch_size=args.test_batch_size, shuffle=True, **kwargs) 
+    indices = list(range(3779))
+    testing_indices = np.random.choice(indices, size=945, replace=False)
+    training_indices = list(set(indices)-set(testing_indices))
+    training_sampler = SubsetRandomSampler(training_indices)
+    testing_sampler = SubsetRandomSampler(testing_indices)
+
+    training_data = [training_img_folder, training_label_folder, training_img_files, training_label_files]
+    train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
+    test_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.test_batch_size, sampler=training_sampler) 
 
     model = UNet(n_channels=3, n_classes=1).to(device)
     model.double()
