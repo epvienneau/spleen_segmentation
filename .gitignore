@@ -2,3 +2,5 @@ data/*
 loss_outputs/*
 models/*
 *.swp
+*__pycache__*
+*.ipynb_checkpoints*
