@@ -22,7 +22,12 @@ class img_loader(data.Dataset):
         img = soft_tissue_window(img)
         label = nib.load(label_file).get_fdata()
         label = isolate_spleen(label)
-        #img = img.astype('float')
+        #img = np.concatenate((img, img, img), axis=0) #copy into three channels
+        img = np.reshape(img, (128, 128, 1)) #now it's 128x128x1
+        img = np.moveaxis(img, -1, 0) #now channel dimension is first
+        #label = np.concatenate((label, label, label), axis=0) #copy into three channels
+        label = np.reshape(label, (128, 128, 1)) #now it's 128x128x1
+        label = np.moveaxis(label, -1, 0) #now channel dimension is first
         return [img, label]
 
     def __len__(self): 

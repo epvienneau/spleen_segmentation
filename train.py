@@ -28,7 +28,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad() 
-        output = model(data)
+        output = F.sigmoid(model(data))
         criterion = nn.BCELoss()
         loss = criterion(output, target)
         loss.backward()
@@ -57,7 +57,9 @@ def test(args, model, device, test_loader):
     print('Average loss: {:.4f}'.format(avg_loss)) 
     dice = dice_coeff(output, target)
     dice_loss.append(dice)
-    print('Dice: {:.4f}%'.format(dice))
+    print('Dice:')
+    print(float(dice))
+   #print('Dice: {:.4f}%'.format(dice))
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Mutliclass Classification')
@@ -87,7 +89,7 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
  
     training_img_folder = ['data/training/slices/img']*3779
-    training_label_folder  = ['data/test/slices/label']*3779
+    training_label_folder  = ['data/training/slices/label']*3779
     training_img_files = os.listdir('data/training/slices/img')
     training_label_files = os.listdir('data/training/slices/label')
     
@@ -101,7 +103,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
     test_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.test_batch_size, sampler=training_sampler) 
 
-    model = UNet(n_channels=3, n_classes=1).to(device)
+    model = UNet(n_channels=1, n_classes=1).to(device)
     model.double()
     model = model.cuda()
     #use adam optimizer, try SGD if not good results
@@ -137,7 +139,7 @@ def main():
         
         losswriter.writerow('DICE')
         for item in dice_loss:
-            losswriter.writerow(str(round(item, 4)))
+            losswriter.writerow(str(round(float(item), 4)))
         
         losswriter.writerow('training')
         for item in training_loss:
