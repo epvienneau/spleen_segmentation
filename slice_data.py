@@ -4,9 +4,9 @@ import nibabel as nib
 from utils import crop, save
 
 def main():
-    img_folder = 'data/training/img/'
+    img_folder = 'data/testing/img/'
     #label_folder = 'data/training/label/' #comment out to do this on testing data
-    img_slices_folder = 'data/training/slices/img/'
+    img_slices_folder = 'data/testing/slices/img/'
     #label_slices_folder = 'data/training/slices/label/' #comment out to do this on testing data
     
     for filename in os.listdir(img_folder):

@@ -17,7 +17,8 @@ def test(model, test_loader):
 
 def main(img_id):
     model = UNet(n_channels=1, n_classes=1)
-    model = model.cuda()
+    model.load_state_dict(torch.load('models/UNetModel_2018-11-05_07:58:38.pth'))
+    model = model.double()
     img_path = 'data/testing/slices/img/'
     data_test = [img_path, img_id] 
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))

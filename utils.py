@@ -16,7 +16,7 @@ def crop(data, ds): #assumes square, downsample factor evenly divides image, and
     return data
 
 def save(data, name):
-    img = nib.Nifti1Image(data, np.eye(4)) #provide identity matrix as affine transformation
+    img = nib.Nifti1Image(data, np.eye(4), nib.Nifti1Header()) #provide identity matrix as affine transformation
     nib.save(img, name)
 
 

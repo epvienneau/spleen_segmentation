@@ -19,7 +19,7 @@ class img_loader(data.Dataset):
         img = soft_tissue_window(img)
         img = np.reshape(img, (128, 128, 1))
         img = np.moveaxis(img, -1, 0)
-        return [img]
+        return img
 
     def __len__(self): 
         return len(self.sub_list[0]) 
