@@ -16,7 +16,7 @@ import datetime
 import time
 import os
 from torch.utils.data import Dataset
-from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.data.sampler import SubsetRandomSampler, WeightedRandomSampler
 
 start_time = time.time()
 training_loss = []
@@ -94,19 +94,21 @@ def main():
         spleen_probs = spleen_probs.replace('[', '')
         spleen_probs = spleen_probs.replace(']', '')
         spleen_probs = spleen_probs.split(',')
-        spleen_probs = list(map(int, probs))
+        spleen_probs = list(map(float, spleen_probs))
 
     training_img_folder = ['data/training/slices/img']*3779
     training_label_folder  = ['data/training/slices/label']*3779
     training_img_files = os.listdir('data/training/slices/img')
     training_label_files = os.listdir('data/training/slices/label')
     
-    indices = list(range(3779))
-    testing_indices = np.random.choice(indices, size=945, replace=False)
+    num_total_samples = 3779
+    indices = list(range(num_total_samples))
+    num_testing_samples = round(.2*num_total_samples)
+    testing_indices = np.random.choice(indices, size=num_testing_samples, replace=False)
     training_indices = list(set(indices)-set(testing_indices))
     #training_sampler = SubsetRandomSampler(training_indices)
     testing_sampler = SubsetRandomSampler(testing_indices)
-    training_sampler = WeightedRandomSampler([spleen_probs[i] for i in training_indices])
+    training_sampler = WeightedRandomSampler([spleen_probs[i] for i in training_indices], num_total_samples-num_testing_samples)
 
     training_data = [training_img_folder, training_label_folder, training_img_files, training_label_files]
     train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
