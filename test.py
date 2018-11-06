@@ -8,6 +8,7 @@ from unet import UNet
 import sys
 import os
 import glob
+import numpy as np
 from utils import save
 
 def test(model, test_loader):
@@ -26,6 +27,7 @@ def main(img_id):
     data_test = [img_path, img_id] 
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))
     prediction = test(model, test_loader)
+    prediction = np.reshape(prediction, (128, 128))
     save(prediction, 'data/testing/slices/pred/'+img_id)
 
 if __name__ == '__main__':
