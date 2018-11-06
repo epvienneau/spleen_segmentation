@@ -5,20 +5,28 @@ import nibabel as nib
 from utils import crop, save, isolate_spleen
 
 def main():
-    #img_folder = 'data/testing/img/'
-    label_folder = 'data/training/label/' #comment out to do this on testing data
-    #img_slices_folder = 'data/testing/slices/img/'
-    label_slices_folder = 'data/training/slices/label/' #comment out to do this on testing data
+    img_folder = 'data/training/img/'
+    label_folder = 'data/training/label/' 
+    test_img_folder = 'data/testing/img/'
+    img_slices_folder = 'data/training/slices/img/'
+    label_slices_folder = 'data/training/slices/label/' 
+    test_img_slices_folder = 'data/testing/slices/img/'
     spleen_slices = []
     
-    #for filename in  os.listdir(img_folder):
-    #    img = nib.load(img_folder+filename).get_fdata()
-    #    img = crop(img, 4)
-    #    img_id = filename[0:-7]
-    #    for s in range(np.shape(img)[2]):
-    #        save(img[:,:,s], img_slices_folder+img_id+'_'+str(s)+'.nii.gz')
+    for filename in os.listdir(img_folder):
+        img = nib.load(img_folder+filename).get_fdata()
+        img = crop(img, 4)
+        img_id = filename[0:-7]
+        for s in range(np.shape(img)[2]):
+            save(img[:,:,s], img_slices_folder+img_id+'_'+str(s)+'.nii.gz')
 
-    #comment out to do this on testing data
+    for filename in os.listdir(test_img_folder):
+        img = nib.load(test_img_folder+filename).get_fdata()
+        img = crop(img, 4)
+        img_id = filename[0:-7]
+        for s in range(np.shape(img)[2]):
+            save(img[:,:,s], test_img_slices_folder+img_id+'_'+str(s)+'.nii.gz')
+
     for filename in os.listdir(label_folder):
         label = nib.load(label_folder+filename).get_fdata()
         label = crop(label, 4)
