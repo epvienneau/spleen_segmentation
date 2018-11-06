@@ -1,5 +1,4 @@
 import numpy as np
-import bibabel as nib
 import test
 import sys
 import os
