@@ -7,11 +7,11 @@ from utils import save
 def main(img_id):
     img_folder = 'data/testing/slices/pred/'
     out_folder = 'data/testing/results/'
-    img_slices = [item for item in os.listdir(img_folder) if img_id in item]
+    img_slices = [item for item in os.listdir(img_folder) if img_id[0:-7] in item]
     num_slices = len(img_slices)
     vol_img = np.zeros((128, 128, num_slices))
     for index, item in zip(range(num_slices), img_slices):
-        img = nib.load(img_folder+filename).get_fdata()
+        img = nib.load(img_folder+item).get_fdata()
         vol_img[:,:,index] = img
     save(vol_img, out_folder+img_id)
 
