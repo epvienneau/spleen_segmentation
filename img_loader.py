@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import nibabel as nib
-from utils import soft_tissue_window, isolate_spleen
+from utils import soft_tissue_window#, isolate_spleen
 from torch.utils import data
 
 class img_loader(data.Dataset):
@@ -21,7 +21,7 @@ class img_loader(data.Dataset):
         #note that images have already been cropped to 128x128
         img = soft_tissue_window(img)
         label = nib.load(label_file).get_fdata()
-        label = isolate_spleen(label)
+        #label = isolate_spleen(label) #did this is slice_data 
         #img = np.concatenate((img, img, img), axis=0) #copy into three channels
         img = np.reshape(img, (128, 128, 1)) #now it's 128x128x1
         img = np.moveaxis(img, -1, 0) #now channel dimension is first

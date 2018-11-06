@@ -87,7 +87,15 @@ def main():
     torch.manual_seed(args.seed)
     
     device = torch.device("cuda" if use_cuda else "cpu")
- 
+    
+    spleen_probs = []
+    with open('spleen_probs.txt', 'r') as f:
+        spleen_probs = f.read()
+        spleen_probs = spleen_probs.replace('[', '')
+        spleen_probs = spleen_probs.replace(']', '')
+        spleen_probs = spleen_probs.split(',')
+        spleen_probs = list(map(int, probs))
+
     training_img_folder = ['data/training/slices/img']*3779
     training_label_folder  = ['data/training/slices/label']*3779
     training_img_files = os.listdir('data/training/slices/img')
@@ -96,8 +104,9 @@ def main():
     indices = list(range(3779))
     testing_indices = np.random.choice(indices, size=945, replace=False)
     training_indices = list(set(indices)-set(testing_indices))
-    training_sampler = SubsetRandomSampler(training_indices)
+    #training_sampler = SubsetRandomSampler(training_indices)
     testing_sampler = SubsetRandomSampler(testing_indices)
+    training_sampler = WeightedRandomSampler([spleen_probs[i] for i in training_indices])
 
     training_data = [training_img_folder, training_label_folder, training_img_files, training_label_files]
     train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
