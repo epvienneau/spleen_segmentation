@@ -7,7 +7,7 @@ def soft_tissue_window(img):
     return img
 
 def isolate_spleen(label):
-    label[np.where(label != 10)] = 0
+    label[np.where(label != 1)] = 0
     return label
 
 def crop(data, ds): #assumes square, downsample factor evenly divides image, and downsample factor is an int
