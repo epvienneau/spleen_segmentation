@@ -6,6 +6,8 @@ from torchvision import datasets, transforms
 from img_loader_test import img_loader
 from unet import UNet
 import sys
+import os
+import glob
 from utils import save
 
 def test(model, test_loader):
@@ -17,7 +19,8 @@ def test(model, test_loader):
 
 def main(img_id):
     model = UNet(n_channels=1, n_classes=1)
-    model.load_state_dict(torch.load('models/UNetModel_2018-11-05_07:58:38.pth'))
+    model_file = max(glob.glob('models/*'), key=os.path.getctime) #detect latest version
+    model.load_state_dict(torch.load(model_file))
     model = model.double()
     img_path = 'data/testing/slices/img/'
     data_test = [img_path, img_id] 
