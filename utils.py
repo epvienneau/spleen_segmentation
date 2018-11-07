@@ -1,5 +1,6 @@
 import numpy as np
 import nibabel as nib
+from skimage.transform import resize
 
 def soft_tissue_window(img):
     img[np.where(img<100)] = 0
@@ -10,13 +11,16 @@ def isolate_spleen(label):
     label[np.where(label != 1)] = 0
     return label
 
-def crop(data, ds): #assumes square, downsample factor evenly divides image, and downsample factor is an int
+def downsample(data, ds): #assumes square, downsample factor evenly divides image, and downsample factor is an int
     l = np.shape(data)[0]
     data = data[0:l-1:ds, 0:l-1:ds, :]
     return data
 
-def save(data, name):
-    img = nib.Nifti1Image(data, np.eye(4), nib.Nifti1Header()) #provide identity matrix as affine transformation
-    nib.save(img, name)
+def upsample(data, ds):
+    data = scipy.misc.imresize(data, float(ds))
+
+def save(data, file_name, hdr):
+    img = nib.Nifti1Image(data, np.eye(4), hdr) #provide identity matrix as affine transformation
+    nib.save(img, file_name)
 
 

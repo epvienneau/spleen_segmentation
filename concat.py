@@ -11,9 +11,11 @@ def main(img_id):
     num_slices = len(img_slices)
     vol_img = np.zeros((128, 128, num_slices))
     for index, item in zip(range(num_slices), img_slices):
-        img = nib.load(img_folder+item).get_fdata()
+        data = nib.load(img_folder+item)
+        img = data.get_fdata()
+        hdr = data.header
         vol_img[:,:,index] = img
-    save(vol_img, out_folder+img_id)
+    save(vol_img, out_folder+img_id, hdr)
 
 if __name__ == '__main__':
     main(sys.argv[1])
