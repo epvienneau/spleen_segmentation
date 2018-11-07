@@ -10,13 +10,17 @@ import os
 import glob
 import numpy as np
 from utils import save
+import nibabel as nib
 
 def test(model, test_loader):
     model.eval()
     with torch.no_grad():
         for data in test_loader:
-            output = F.sigmoid(model(data))
-    return output
+            output = model(data)
+            output = output.squeeze()
+            output_probs = F.sigmoid(output) 
+            output_mask = (output_probs > 0.5).float()
+    return output_mask
 
 def main(img_id):
     model = UNet(n_channels=1, n_classes=1)
@@ -26,9 +30,10 @@ def main(img_id):
     img_path = 'data/testing/slices/img/'
     data_test = [img_path, img_id] 
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))
+    hdr = nib.load(img_path+img_id).header
     prediction = test(model, test_loader)
     prediction = np.reshape(prediction, (128, 128))
-    save(prediction, 'data/testing/slices/pred/'+img_id)
+    save(prediction, 'data/testing/slices/pred/'+img_id, hdr)
 
 if __name__ == '__main__':
     main(sys.argv[1])

@@ -28,9 +28,15 @@ def train(args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad() 
-        output = F.sigmoid(model(data))
+        output = model(data)
+        output = output.squeeze()
+        output_probs = F.sigmoid(output)
+        output_mask = (output_probs > 0.5).float()
+        target = target.squeeze()
         criterion = nn.BCELoss()
-        loss = criterion(output, target)
+        output_probs_flat = output_probs.view(-1)
+        target_flat = target.view(-1)
+        loss = criterion(output_probs_flat, target_flat)
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -42,23 +48,31 @@ def train(args, model, device, train_loader, optimizer, epoch):
 def test(args, model, device, test_loader):
     model.eval()
     loss = 0
+    dice = 0
     avg_loss = 0
+    avg_dice = 0
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = F.sigmoid(model(data))
+            output = model(data)
+            output = output.squeeze()
+            target = target.squeeze()
+            output_probs = F.sigmoid(output)
+            output_mask = (output_probs > 0.5).float()
             criterion = nn.BCELoss()
-            loss += criterion(output, target).item() 
-            avg_loss += loss
-    avg_loss /= len(test_loader.dataset)
+            output_probs_flat = output_probs.view(-1)
+            target_flat = target.view(-1)
+            loss += criterion(output_probs_flat.float(), target_flat.float()).item() 
+            dice += dice_coeff(output_mask, target.float()).item()
+    avg_loss = loss/len(test_loader.dataset)
+    avg_dice = dice/len(test_loader.dataset)
     test_loss.append(avg_loss)
-    
+    dice_loss.append(avg_dice)
+ 
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
-    dice = dice_coeff(output, target)
-    dice_loss.append(dice)
     print('Dice:')
-    print(float(dice))
+    print(float(avg_dice))
    #print('Dice: {:.4f}%'.format(dice))
 
 def main():
@@ -95,13 +109,13 @@ def main():
         spleen_probs = spleen_probs.replace(']', '')
         spleen_probs = spleen_probs.split(',')
         spleen_probs = list(map(float, spleen_probs))
-
-    training_img_folder = ['data/training/slices/img']*3779
-    training_label_folder  = ['data/training/slices/label']*3779
+    
+    num_total_samples = 3779
+    training_img_folder = ['data/training/slices/img']*num_total_samples
+    training_label_folder  = ['data/training/slices/label']*num_total_samples
     training_img_files = os.listdir('data/training/slices/img')
     training_label_files = os.listdir('data/training/slices/label')
     
-    num_total_samples = 3779
     indices = list(range(num_total_samples))
     num_testing_samples = round(.2*num_total_samples)
     testing_indices = np.random.choice(indices, size=num_testing_samples, replace=False)
@@ -112,7 +126,7 @@ def main():
 
     training_data = [training_img_folder, training_label_folder, training_img_files, training_label_files]
     train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
-    test_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.test_batch_size, sampler=training_sampler) 
+    test_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.test_batch_size, sampler=testing_sampler) 
 
     model = UNet(n_channels=1, n_classes=1).to(device)
     model.double()
