@@ -16,7 +16,7 @@ class img_loader(data.Dataset):
         img_name = subinfo[1]
         img_file = os.path.join(img_folder, img_name)
         img = nib.load(img_file).get_fdata()
-        #img = soft_tissue_window(img)
+        img = soft_tissue_window(img)
         img = np.reshape(img, (128, 128, 1))
         img = np.moveaxis(img, -1, 0)
         return img

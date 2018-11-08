@@ -135,9 +135,9 @@ def main():
     num_testing_samples = round(.2*num_total_samples)
     testing_indices = np.random.choice(indices, size=num_testing_samples, replace=False)
     training_indices = list(set(indices)-set(testing_indices))
-    training_sampler = SubsetRandomSampler(training_indices)
+    #training_sampler = SubsetRandomSampler(training_indices)
     testing_sampler = SubsetRandomSampler(testing_indices)
-    #training_sampler = WeightedRandomSampler([spleen_probs[i] for i in training_indices], num_total_samples-num_testing_samples)
+    training_sampler = WeightedRandomSampler([spleen_probs[i] for i in training_indices], num_total_samples-num_testing_samples)
 
     training_data = [training_img_folder, training_label_folder, training_img_files, training_label_files]
     train_loader = torch.utils.data.DataLoader(img_loader(training_data), batch_size=args.batch_size, sampler=training_sampler)
@@ -150,7 +150,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
-        #train(args, model, device, train_loader, optimizer, epoch)
+        train(args, model, device, train_loader, optimizer, epoch)
         #print('First epoch runtime:')
         #print(time.time()-start_time)
         test(args, model, device, test_loader, best_dice)
