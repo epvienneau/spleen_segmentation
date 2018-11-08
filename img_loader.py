@@ -19,7 +19,7 @@ class img_loader(data.Dataset):
         label_file = os.path.join(label_folder, label_name)
         img = nib.load(img_file).get_fdata()
         #note that images have already been cropped to 128x128
-        #img = soft_tissue_window(img)
+        img = soft_tissue_window(img)
         label = nib.load(label_file).get_fdata()
         #label = isolate_spleen(label) #did this is slice_data 
         #img = np.concatenate((img, img, img), axis=0) #copy into three channels

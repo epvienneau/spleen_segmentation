@@ -150,7 +150,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
-        #train(args, model, device, train_loader, optimizer, epoch)
+        train(args, model, device, train_loader, optimizer, epoch)
         #print('First epoch runtime:')
         #print(time.time()-start_time)
         test(args, model, device, test_loader, best_dice)
