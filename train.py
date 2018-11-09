@@ -11,6 +11,7 @@ from unet import UNet
 import math
 import numpy as np
 import csv
+import json
 import sklearn.metrics as metrics
 import datetime
 import time
@@ -148,7 +149,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
-        #train(args, model, device, train_loader, optimizer, epoch)
+        train(args, model, device, train_loader, optimizer, epoch)
         test(args, model, device, test_loader, best_dice)
 
     current_daytime = str(datetime.datetime.now()).replace(" ", "_")[:-7]    
