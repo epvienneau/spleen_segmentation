@@ -33,7 +33,7 @@ def main():
 
     for filename in os.listdir(label_folder):
         data = nib.load(label_folder+filename)
-        img = data.get_fdata()
+        label = data.get_fdata()
         hdr = data.header
         #label = downsample(label, 4)
         label = isolate_spleen(label)
