@@ -20,11 +20,11 @@ class img_loader(data.Dataset):
         img = nib.load(img_file).get_fdata()
         #img = soft_tissue_window(img)
         label = nib.load(label_file).get_fdata()
-        img = downsample(img, 2)
-        label = downsample(label, 2)
-        img = np.reshape(img, (256, 256, 1)) #now it's 512x512x1
+        #img = downsample(img, 2)
+        #label = downsample(label, 2)
+        img = np.reshape(img, (256, 256, 1)) #now it's 256x256x1
         img = np.moveaxis(img, -1, 0) #now channel dimension is first
-        label = np.reshape(label, (256, 256, 1)) #now it's 512x512x1
+        label = np.reshape(label, (256, 256, 1)) #now it's 256x256x1
         label = np.moveaxis(label, -1, 0) #now channel dimension is first
         return [img, label]
 
