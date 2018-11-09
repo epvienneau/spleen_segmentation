@@ -17,7 +17,7 @@ def main():
         data = nib.load(img_folder+filename)
         img = data.get_fdata()
         hdr = data.header
-        img = downsample(img, 4)
+        #img = downsample(img, 4)
         img_id = filename[0:-7]
         for s in range(np.shape(img)[2]):
             save(img[:,:,s], img_slices_folder+img_id+'_'+str(s)+'.nii.gz', hdr)
@@ -26,7 +26,7 @@ def main():
         data = nib.load(test_img_folder+filename)
         img = data.get_fdata()
         hdr = data.header
-        img = downsample(img, 4)
+        #img = downsample(img, 4)
         img_id = filename[0:-7]
         for s in range(np.shape(img)[2]):
             save(img[:,:,s], test_img_slices_folder+img_id+'_'+str(s)+'.nii.gz', hdr)
@@ -35,7 +35,7 @@ def main():
         data = nib.load(label_folder+filename)
         img = data.get_fdata()
         hdr = data.header
-        label = downsample(label, 4)
+        #label = downsample(label, 4)
         label = isolate_spleen(label)
         label_id = filename[0:-7]
         for s in range(np.shape(label)[2]):

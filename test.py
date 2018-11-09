@@ -32,7 +32,7 @@ def main(img_id):
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))
     hdr = nib.load(img_path+img_id).header
     prediction = test(model, test_loader)
-    prediction = np.reshape(prediction, (128, 128))
+    prediction = np.reshape(prediction, 512, 512)
     save(prediction, 'data/testing/slices/pred/'+img_id, hdr)
 
 if __name__ == '__main__':
