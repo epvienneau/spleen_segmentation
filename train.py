@@ -30,7 +30,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
         optimizer.zero_grad() 
         output = model(data)
         output = output.squeeze()
-        output_probs = F.sigmoid(output)
+        output_probs = torch.sigmoid(output)
         output_mask = (output_probs > 0.5).float()
         target = target.squeeze()
         criterion = nn.BCELoss()
@@ -57,15 +57,15 @@ def test(args, model, device, test_loader, best_dice):
             output = model(data)
             output = output.squeeze()
             target = target.squeeze()
-            output_probs = F.sigmoid(output)
+            output_probs = torch.sigmoid(output)
             output_mask = (output_probs > 0.5).float()
             criterion = nn.BCELoss()
             output_probs_flat = output_probs.view(-1)
             target_flat = target.view(-1)
             loss += criterion(output_probs_flat.float(), target_flat.float()).item() 
             dice += dice_coeff(output_mask, target.float()).item()
-    avg_loss = loss/len(test_loader.dataset)
-    avg_dice = dice/len(test_loader.dataset)
+    avg_loss = loss/args.test_batch_size
+    avg_dice = dice/args.test_batch_size
     test_loss.append(avg_loss)
     dice_loss.append(avg_dice)
     if avg_dice > best_dice:
@@ -79,14 +79,13 @@ def test(args, model, device, test_loader, best_dice):
    #print('Dice: {:.4f}%'.format(dice))
 
 def save_model(epochs, model, best_dice, avg_loss):
-    model_file = 'models/UNetModel_checkpoint.pth'
-    params = {
-            "epochs": epochs,
-            "model": model.state_dict(),
-            "dice": best_dice,
-            "val_loss": avg_loss
-            }
-    torch.save(params, model_file)
+    current_time = str(datetime.datetime.now()).replace(" ", "_")[:-7] 
+    model_file = 'models/UNetModel_checkpoint_'+ current_time + '.pth'
+    params_file = 'models/params_checkpoint_' + current_time + '.txt'
+    params = {'epochs': epochs, 'best dice': best_dice, 'average loss': avg_loss}
+    torch.save(model.state_dict(), model_file)
+    with open(params_file, 'w') as f:
+        json.dump(params, f)
 
 def main():
     best_dice = np.array([0.0])
@@ -146,11 +145,10 @@ def main():
     model = UNet(n_channels=1, n_classes=1).to(device)
     model.double()
     model = model.cuda()
-    #use adam optimizer, try SGD if not good results
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
+        #train(args, model, device, train_loader, optimizer, epoch)
         test(args, model, device, test_loader, best_dice)
 
     current_daytime = str(datetime.datetime.now()).replace(" ", "_")[:-7]    

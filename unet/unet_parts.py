@@ -48,15 +48,13 @@ class down(nn.Module):
 class up(nn.Module):
     def __init__(self, in_ch, out_ch, bilinear=True):
         super(up, self).__init__()
-        if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        else:
-            self.up = nn.ConvTranspose2d(in_ch//2, in_ch//2, 2, stride=2)
-
         self.conv = double_conv(in_ch, out_ch)
 
-    def forward(self, x1, x2):
-        x1 = self.up(x1)
+    def forward(self, x1, x2, bilinear=True):
+        if bilinear:
+            x1 = F.interpolate(x1, scale_factor=2, mode='bilinear', align_corners=True)
+        else:
+            x1 = nn.ConvTranspose2d(in_chan//2, in_chan//2, 2, stride=2)
         diffX = x1.size()[2] - x2.size()[2]
         diffY = x1.size()[3] - x2.size()[3]
         x2 = F.pad(x2, (diffX // 2, int(diffX / 2),
