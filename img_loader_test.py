@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import nibabel as nib
-from utils import soft_tissue_window
+from utils import soft_tissue_window, downsample
 from torch.utils import data
 
 class img_loader(data.Dataset):
@@ -18,6 +18,7 @@ class img_loader(data.Dataset):
         #img = soft_tissue_window(img)
         img = np.reshape(img, (512, 512, 1))
         img = np.moveaxis(img, -1, 0)
+        img = downsample(img, 2)
         return img
 
     def __len__(self): 

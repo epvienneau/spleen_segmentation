@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import nibabel as nib
-from utils import soft_tissue_window
+from utils import soft_tissue_window, downsample
 from torch.utils import data
 
 class img_loader(data.Dataset):
@@ -24,6 +24,8 @@ class img_loader(data.Dataset):
         img = np.moveaxis(img, -1, 0) #now channel dimension is first
         label = np.reshape(label, (512, 512, 1)) #now it's 512x512x1
         label = np.moveaxis(label, -1, 0) #now channel dimension is first
+        img = downsample(img, 2)
+        label = downsample(label, 2)
         return [img, label]
 
     def __len__(self): 
