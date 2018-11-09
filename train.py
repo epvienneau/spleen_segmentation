@@ -98,8 +98,8 @@ def main():
                         help='input batch size for testing (default: 1)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                        help='learning rate (default: 0.001)')
+    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+                        help='learning rate (default: 0.01)')
     parser.add_argument('--beta1', type=float, default=0.9, help='Beta1 for Adam (default: 0.9)')
     parser.add_argument('--beta2', type=float, default=0.999, help='Beta2 for Adam (default: 0.999)')
     parser.add_argument('--eps', type=float, default=1e-8, help='Epsilon for Adam (default: 1e-8)')
@@ -128,12 +128,12 @@ def main():
     num_total_samples = 3779
     training_img_folder = ['data/training/slices/img']*num_total_samples
     training_label_folder  = ['data/training/slices/label']*num_total_samples
-    training_img_files = os.listdir('data/training/slices/img')
-    training_label_files = os.listdir('data/training/slices/label')
+    training_img_files = sorted(os.listdir('data/training/slices/img'))
+    training_label_files = sorted(os.listdir('data/training/slices/label'))
     
     indices = list(range(num_total_samples))
     num_testing_samples = round(.2*num_total_samples)
-    testing_indices = np.random.choice(indices, size=num_testing_samples, replace=False)
+    testing_indices = list(np.random.choice(indices, size=num_testing_samples, replace=False))
     training_indices = list(set(indices)-set(testing_indices))
     training_sampler = SubsetRandomSampler(training_indices)
     testing_sampler = SubsetRandomSampler(testing_indices)
@@ -151,8 +151,6 @@ def main():
 
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        #print('First epoch runtime:')
-        #print(time.time()-start_time)
         test(args, model, device, test_loader, best_dice)
 
     current_daytime = str(datetime.datetime.now()).replace(" ", "_")[:-7]    
