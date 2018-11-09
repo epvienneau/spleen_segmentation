@@ -16,9 +16,9 @@ class img_loader(data.Dataset):
         img_file = os.path.join(img_folder, img_name)
         img = nib.load(img_file).get_fdata()
         #img = soft_tissue_window(img)
-        img = np.reshape(img, (512, 512, 1))
-        img = np.moveaxis(img, -1, 0)
         img = downsample(img, 2)
+        img = np.reshape(img, (256, 256, 1))
+        img = np.moveaxis(img, -1, 0)
         return img
 
     def __len__(self): 
