@@ -52,6 +52,7 @@ def test(args, model, device, test_loader, best_dice):
     dice = 0
     avg_loss = 0
     avg_dice = 0
+    count = 0
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
@@ -65,14 +66,16 @@ def test(args, model, device, test_loader, best_dice):
             target_flat = target.view(-1)
             loss += criterion(output_probs_flat.float(), target_flat.float()).item() 
             dice += dice_coeff(output_mask, target.float()).item()
-    avg_loss = loss/args.test_batch_size
-    avg_dice = dice/args.test_batch_size
+            count += 1
+
+    avg_loss = loss/count
+    avg_dice = dice/count
     test_loss.append(avg_loss)
     dice_loss.append(avg_dice)
     if avg_dice > best_dice:
-        save_model(args.epochs, model, best_dice, avg_loss)
         best_dice = avg_dice
-
+        save_model(args.epochs, model, best_dice, avg_loss)
+    
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
     print('Dice:')
@@ -81,12 +84,12 @@ def test(args, model, device, test_loader, best_dice):
 
 def save_model(epochs, model, best_dice, avg_loss):
     current_time = str(datetime.datetime.now()).replace(" ", "_")[:-7] 
-    model_file = 'models/UNetModel_checkpoint_'+ current_time + '.pth'
-    params_file = 'models/params_checkpoint_' + current_time + '.txt'
-    params = {'epochs': epochs, 'best dice': best_dice, 'average loss': avg_loss}
+    model_file = 'models/Checkpoint_e' + str(epochs) + '_d' + str(round(best_dice, 4)) + '_l' + str(round(avg_loss, 4)) + '_' + current_time + '.pth'
+    #params_file = 'models/params_checkpoint_' + current_time + '.txt'
+    #params = {'epochs': epochs, 'best dice': float(best_dice[0]), 'average loss': float(avg_loss[0])}
     torch.save(model.state_dict(), model_file)
-    with open(params_file, 'w') as f:
-        json.dump(params, f)
+    #with open(params_file, 'w') as f:
+    #    json.dump(params, f)
 
 def main():
     best_dice = np.array([0.0])

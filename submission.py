@@ -13,6 +13,7 @@ def main():
         for item in all_img_slices:
             test.main(item)
         concat.main(img_id)
-
+        break;
+        
 if __name__ == '__main__':
     main()

@@ -12,13 +12,14 @@ class img_loader(data.Dataset):
         # load image
         subinfo = self.sub_list
         img_folder = subinfo[0][index] #data/training/slices/img
+        print(len(subinfo[0]))
         label_folder = subinfo[1][index] #data/training/slices/label
         img_name = subinfo[2][index] #eg, img0001_0.nii.gz
         label_name = subinfo[3][index] #eg, label0001_0.nii.gz
         img_file = os.path.join(img_folder, img_name)
         label_file = os.path.join(label_folder, label_name)
         img = nib.load(img_file).get_fdata()
-        #img = soft_tissue_window(img)
+        img = soft_tissue_window(img)
         label = nib.load(label_file).get_fdata()
         #img = downsample(img, 2)
         #label = downsample(label, 2)

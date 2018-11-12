@@ -9,7 +9,7 @@ import sys
 import os
 import glob
 import numpy as np
-from utils import save
+from utils import save, upsample
 import nibabel as nib
 
 def test(model, test_loader):
@@ -18,21 +18,22 @@ def test(model, test_loader):
         for data in test_loader:
             output = model(data)
             output = output.squeeze()
-            output_probs = F.sigmoid(output) 
+            output_probs = torch.sigmoid(output) 
             output_mask = (output_probs > 0.5).float()
     return output_mask
 
 def main(img_id):
     model = UNet(n_channels=1, n_classes=1)
-    model_file = max(glob.glob('models/*'), key=os.path.getctime) #detect latest version
+    model_file = max(glob.glob('models/bare_bones/*'), key=os.path.getctime) #detect latest version
     model.load_state_dict(torch.load(model_file))
     model = model.double()
     img_path = 'data/testing/slices/img/'
     data_test = [img_path, img_id] 
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))
     hdr = nib.load(img_path+img_id).header
-    prediction = test(model, test_loader)
-    prediction = np.reshape(prediction, 256, 256)
+    prediction = test(model, test_loader).numpy()
+    prediction = np.reshape(prediction, (256, 256))
+    prediction = upsample(prediction, 2)
     save(prediction, 'data/testing/slices/pred/'+img_id, hdr)
 
 if __name__ == '__main__':
