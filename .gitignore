@@ -1,5 +1,4 @@
 data/*
-loss_outputs/*
 models/*
 *.swp
 *__pycache__*

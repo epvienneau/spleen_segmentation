@@ -29,9 +29,12 @@ def main(img_id):
     model.load_state_dict(torch.load(model_file))
     model = model.double()
     img_path = 'data/testing/slices/img/'
+    img_vol_path = 'data/testing/img/' #this is for getting an accurate header
     data_test = [img_path, img_id] 
     test_loader = torch.utils.data.DataLoader(img_loader(data_test))
     hdr = nib.load(img_path+img_id).header
+    vol_hdr = nib.load(img_vol_path+img_id[0:7]+'.nii.gz').header
+    hdr['pixdim'] = vol_hdr['pixdim'] #explicitly set this to force it to keep the correct pixel dimensions
     prediction = test(model, test_loader).numpy()
     prediction = np.reshape(prediction, (256, 256))
     prediction = upsample(prediction, 2)

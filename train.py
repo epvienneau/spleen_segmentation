@@ -50,6 +50,7 @@ def test(args, model, device, test_loader, best_dice, epochs):
     model.eval()
     loss = 0
     dice = 0
+    all_dice_coeffs = []
     avg_loss = 0
     avg_dice = 0
     count = 0
@@ -66,10 +67,13 @@ def test(args, model, device, test_loader, best_dice, epochs):
             target_flat = target.view(-1)
             loss += criterion(output_probs_flat.float(), target_flat.float()).item() 
             dice += dice_coeff(output_mask, target.float()).item()
+            all_dice_coeffs.append(dice_coeff(output_mask, target.float()).item())
             count += 1
 
     avg_loss = loss/count
     avg_dice = dice/count
+    std_dice = np.std(all_dice_coeffs)
+    med_dice = np.median(all_dice_coeffs)
     test_loss.append(avg_loss)
     dice_loss.append(avg_dice)
     if avg_dice > best_dice:
@@ -78,8 +82,12 @@ def test(args, model, device, test_loader, best_dice, epochs):
     
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
-    print('Dice:')
+    print('Dice Average:')
     print(float(avg_dice))
+    print('Dice Median:')
+    print(float(med_dice))
+    print('Dice Standard Deviation:')
+    print(float(std_dice))
    #print('Dice: {:.4f}%'.format(dice))
 
 def save_model(epochs, model, best_dice, avg_loss):
@@ -149,7 +157,7 @@ def main():
     model = UNet(n_channels=1, n_classes=1).to(device)
     model.double()
     model = model.cuda()
-    model.load_state_dict(torch.load('models/intensity_filtering/UNetModel_2018-11-12_18:48:35.pth'))
+#    model.load_state_dict(torch.load('models/intensity_filtering_continued/Checkpoint_e1_d0.9755_l0.0008_2018-11-13_11:06:28.pth'))
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):

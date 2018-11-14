@@ -20,7 +20,7 @@ def upsample(data, ds):
     return data
 
 def save(data, file_name, hdr):
-    img = nib.Nifti1Image(data, np.eye(4), hdr) #provide identity matrix as affine transformation
+    img = nib.Nifti1Image(data, np.eye(4), hdr) 
     nib.save(img, file_name)
 
 
