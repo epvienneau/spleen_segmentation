@@ -1,0 +1,32 @@
+B a t c h | | S i z e
+5
+T e s t | | B a t c h | | S i z e
+5
+E p o c h s
+5
+L e a r n i n g | | R a t e
+0 . 0 1
+B e t a | | 1
+0 . 9
+B e t a | | 2
+0 . 9 9 9
+E p s i l o n
+1 e - 0 8
+D I C E
+0 . 9 7 5 5
+0 . 9 6 6
+0 . 9 7 2 1
+0 . 9 6 6 6
+0 . 9 5 7 2
+t r a i n i n g
+0 . 0
+0 . 0 0 1 1
+0 . 0
+0 . 0
+0 . 0
+t e s t i n g
+0 . 0 0 0 8
+0 . 0 0 0 9
+0 . 0 0 0 9
+0 . 0 0 1 1
+0 . 0 0 1 5
