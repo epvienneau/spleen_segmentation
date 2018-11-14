@@ -46,7 +46,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
                 100. * batch_idx / len(train_loader), loss.item()))
     training_loss.append(loss.item())
 
-def test(args, model, device, test_loader, best_dice):
+def test(args, model, device, test_loader, best_dice, epochs):
     model.eval()
     loss = 0
     dice = 0
@@ -74,7 +74,7 @@ def test(args, model, device, test_loader, best_dice):
     dice_loss.append(avg_dice)
     if avg_dice > best_dice:
         best_dice = avg_dice
-        save_model(args.epochs, model, best_dice, avg_loss)
+        save_model(epochs, model, best_dice, avg_loss)
     
     print('\nTest set statistics:') 
     print('Average loss: {:.4f}'.format(avg_loss)) 
@@ -149,11 +149,12 @@ def main():
     model = UNet(n_channels=1, n_classes=1).to(device)
     model.double()
     model = model.cuda()
+    model.load_state_dict(torch.load('models/intensity_filtering/UNetModel_2018-11-12_18:48:35.pth'))
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), eps=args.eps)
 
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        test(args, model, device, test_loader, best_dice)
+        test(args, model, device, test_loader, best_dice, epoch)
 
     current_daytime = str(datetime.datetime.now()).replace(" ", "_")[:-7]    
     model_file = 'models/UNetModel_'+current_daytime+'.pth'

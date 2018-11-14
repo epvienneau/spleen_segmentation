@@ -24,7 +24,8 @@ def test(model, test_loader):
 
 def main(img_id):
     model = UNet(n_channels=1, n_classes=1)
-    model_file = max(glob.glob('models/bare_bones/*'), key=os.path.getctime) #detect latest version
+    #model_file = max(glob.glob('models/*'), key=os.path.getctime) #detect latest version
+    model_file = 'models/intensity_filtering_continued/Checkpoint_e1_d0.9755_l0.0008_2018-11-13_11:06:28.pth' #best one!!
     model.load_state_dict(torch.load(model_file))
     model = model.double()
     img_path = 'data/testing/slices/img/'

@@ -9,7 +9,7 @@ def main(img_id):
     out_folder = 'data/testing/results/'
     img_slices = [item for item in os.listdir(img_folder) if img_id[0:-7] in item]
     num_slices = len(img_slices)
-    vol_img = np.zeros((256, 256, num_slices))
+    vol_img = np.zeros((512, 512, num_slices))
     for index, item in zip(range(num_slices), img_slices):
         data = nib.load(img_folder+item)
         img = data.get_fdata()
